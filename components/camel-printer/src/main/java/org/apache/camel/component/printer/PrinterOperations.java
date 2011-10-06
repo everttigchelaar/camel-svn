@@ -49,7 +49,19 @@ public class PrinterOperations implements PrinterOperationsInterface {
         if (printService == null) {
             throw new PrintException("Printer lookup failure. No default printer set up for this host");
         }
-        job = printService.createPrintJob(); 
+        job = printService.createPrintJob();
+        flavor = DocFlavor.BYTE_ARRAY.AUTOSENSE;
+        printRequestAttributeSet = new HashPrintRequestAttributeSet();
+        printRequestAttributeSet.add(new Copies(1));
+        printRequestAttributeSet.add(MediaSizeName.NA_LETTER);
+        printRequestAttributeSet.add(Sides.ONE_SIDED);
+    }
+    
+    private void initDefaults()  throws PrintException {
+        printService = PrintServiceLookup.lookupDefaultPrintService();
+        if (printService != null) {
+            job = printService.createPrintJob();
+        }
         flavor = DocFlavor.BYTE_ARRAY.AUTOSENSE;
         printRequestAttributeSet = new HashPrintRequestAttributeSet();
         printRequestAttributeSet.add(new Copies(1));
@@ -58,7 +70,7 @@ public class PrinterOperations implements PrinterOperationsInterface {
     }
 
     public PrinterOperations(PrintService printService, DocPrintJob job, DocFlavor flavor, PrintRequestAttributeSet printRequestAttributeSet) throws PrintException {
-        this();
+        initDefaults();
         this.setPrintService(printService);
         this.setJob(job);
         this.setFlavor(flavor);

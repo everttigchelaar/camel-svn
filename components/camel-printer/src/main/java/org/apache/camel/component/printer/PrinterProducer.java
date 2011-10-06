@@ -26,6 +26,8 @@ import javax.print.PrintServiceLookup;
 import javax.print.attribute.HashPrintRequestAttributeSet;
 import javax.print.attribute.PrintRequestAttributeSet;
 import javax.print.attribute.standard.Copies;
+import javax.print.attribute.standard.Media;
+import javax.print.attribute.standard.MediaTray;
 
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
@@ -72,8 +74,46 @@ public class PrinterProducer extends DefaultProducer {
         }
         printRequestAttributeSet.add(config.getMediaSizeName());
         printRequestAttributeSet.add(config.getInternalSides());
+        if (config.getMediaTray() != null) {
+            MediaTray mediaTray = resolveMediaTray(config.getMediaTray());
+            
+            if (mediaTray == null) {
+                throw new PrintException("mediatray not found " + config.getMediaTray());
+            }
+            
+            printRequestAttributeSet.add(mediaTray);
+        }
         
         return printRequestAttributeSet;
+    }
+    
+    private MediaTray resolveMediaTray(String tray) {
+        Media med[] = (Media[]) getPrintService().getSupportedAttributeValues(Media.class, null, null);
+        
+        if (med == null) {
+            return null;
+        } else {
+            MediaTray foundTray = null;
+            
+            for (int i = 0; foundTray == null && i < med.length; i++) {
+                Media media = med[i];
+                
+                if (media instanceof MediaTray) {
+                    MediaTray mediaTray = (MediaTray) media;
+                    
+                    String trayName = mediaTray.toString().trim();
+                    
+                    if (trayName.contains(" ")) {
+                        trayName = trayName.replace(' ', '_');
+                    }                    
+                    
+                    if (trayName.equals(tray)) {
+                        return mediaTray;
+                    }                           
+                }
+            }
+            return null;
+        }
     }
     
     private DocPrintJob assignPrintJob(PrintService printService) {
@@ -91,9 +131,36 @@ public class PrinterProducer extends DefaultProducer {
             setPrinter("\\\\" + config.getHostname() + "\\" + config.getPrintername());
             int position = findPrinter(services, printer);
             if (position < 0) {
+                printService = assignPrintServiceFallBack();
+            } else {
+                printService = services[position];
+            }
+        }
+        return printService;
+    }
+    
+    private PrintService assignPrintServiceFallBack() throws PrintException {
+        PrintService printService;
+        
+        if ((config.getHostname().equalsIgnoreCase("localhost")) 
+            && (config.getPrintername().equalsIgnoreCase("/default"))) {
+            printService = PrintServiceLookup.lookupDefaultPrintService();            
+        } else {
+            PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
+            
+            String printerName = config.getPrintername();
+            int sep = printerName.lastIndexOf("/");
+            
+            if (sep > -1) {
+                printerName = printerName.substring(sep + 1);
+            }            
+            
+            setPrinter(printerName);
+            int position = findPrinter(services, printer);
+            if (position < 0) {
                 throw new PrintException("No printer found with name: " + printer + ". Please verify that the host and printer are registered and reachable from this machine.");
             }         
-            printService = services[position];
+            return services[position];
         }
         return printService;
     }

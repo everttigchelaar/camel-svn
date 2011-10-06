@@ -42,6 +42,7 @@ public class PrinterConfiguration {
     private String sides;
     private Sides internalSides;
     private boolean sendToPrinter = true;
+    private String mediaTray;
 
     public PrinterConfiguration() {
     }
@@ -79,8 +80,11 @@ public class PrinterConfiguration {
                 setSendToPrinter(false);
             }
         }
+        if (printSettings.containsKey("mediaTray")) {
+            setMediaTray((String) printSettings.get("mediaTray"));
+        }        
     }
-
+    
     private DocFlavor assignDocFlavor(String flavor, String mimeType) throws Exception {
         // defaults
         if (mimeType == null) {
@@ -289,6 +293,14 @@ public class PrinterConfiguration {
 
     public void setSendToPrinter(boolean sendToPrinter) {
         this.sendToPrinter = sendToPrinter;
+    }
+    
+    public String getMediaTray() {
+        return mediaTray;
+    }
+    
+    public void setMediaTray(String mediaTray) {
+        this.mediaTray = mediaTray;
     }
 
 }

@@ -1,0 +1,29 @@
+apply plugin: 'eclipse'
+apply plugin: 'maven'
+apply plugin: 'java'
+
+repositories { mavenRepo urls: 'http://172.20.2.2:8081/nexus/content/groups/public' }
+
+sourceCompatibility = 1.6
+
+version = '2.7.1'
+
+sourceSets {
+    main {
+        java {
+        srcDir 'components/camel-printer/src/main/java'
+        //srcDir 'camel-core/src/main/java'
+    }
+    resources {
+        srcDir 'components/camel-printer/src/main/resources'
+
+    }
+    }
+}
+
+dependencies {
+    compile 'org.slf4j:slf4j-api:1.6.2'
+    compile 'org.springframework:spring-jmx:2.0.8'
+    compile 'org.osgi:org.osgi.core:4.1.0'
+    compile 'org.apache.camel:camel-core:2.7.1'
+}
